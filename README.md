@@ -1,4 +1,4 @@
-# AI Agent
+# AI Agent Provider
 
 A Laravel package for integrating with various AI providers including OpenAI, Anthropic and Google's Gemini.
 
@@ -22,7 +22,7 @@ A Laravel package for integrating with various AI providers including OpenAI, An
 
 ## Table of Contents
 
-- [AI Agent](#ai-agent)
+- [AI Agent Provider](#ai-agent-provider)
   - [Features](#features)
   - [Table of Contents](#table-of-contents)
   - [Installation](#installation)
@@ -66,13 +66,13 @@ composer require ai-agent/ai-agent
 Publish the configuration file:
 
 ```bash
-php artisan vendor:publish --provider="AiAgent\Providers\AiAgentServiceProvider" --tag="config"
+php artisan vendor:publish --provider="AiAgent\Providers\AiAgentServiceProvider" --tag="ai-agent-config"
 ```
 
 Publish migrations (optional):
 
 ```bash
-php artisan vendor:publish --provider="AiAgent\Providers\AiAgentServiceProvider" --tag="migrations"
+php artisan vendor:publish --provider="AiAgent\Providers\AiAgentServiceProvider" --tag="ai-agent-migrations"
 ```
 
 Run migrations to create the AI interactions table:
