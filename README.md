@@ -53,6 +53,7 @@ A Laravel package for integrating with various AI providers including OpenAI, An
     - [AiLoggerService](#ailoggerservice)
   - [Testing](#testing)
   - [License](#license)
+  - [Issues](#issues)
   - [Author](#author)
 
 ## Installation
@@ -505,6 +506,10 @@ composer test
 ## License
 
 This package is open-sourced software licensed under the MIT license.
+
+## Issues
+
+If you encounter any issues or have suggestions, please submit them through our [GitHub Issues page](https://github.com/Arseno25/AiAgent-provider/issues).
 
 ## Author
 
