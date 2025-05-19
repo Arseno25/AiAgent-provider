@@ -2,7 +2,7 @@
     "name": "ai-agent/ai-agent",
     "description": "A powerful Laravel package for AI integration with multiple providers",
     "type": "library",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "keywords": [
         "laravel",
         "ai",
