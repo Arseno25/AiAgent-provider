@@ -190,13 +190,16 @@ $embeddings = AiAgent::embeddings([
 
 ### Blade Directives
 
-The package provides two Blade directives for easy template integration:
+The package provides several Blade directives for easy template integration:
 
 ```php
-// Text generation
+// First, add the styles for loading indicators in your layout
+@aiStyles()
+
+// Text generation with loading indicator
 @ai('Generate a tagline for a tech company')
 
-// Chat completion
+// Chat completion with loading indicator
 @aichat([
     ['role' => 'user', 'content' => 'Write a short bio for a software developer']
 ])
@@ -204,6 +207,8 @@ The package provides two Blade directives for easy template integration:
 // With specific provider and refresh option
 @ai('Generate a tagline for a tech company', 'anthropic', true)
 ```
+
+The directives now include a loading indicator that shows while the AI is processing your request, providing better UX for users.
 
 ## Advanced Usage
 
