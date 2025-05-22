@@ -42,8 +42,10 @@ class AiAgent
      */
     protected $providers = [];
 
-    /**
-     * Create a new AiAgent instance.
+    /****
+     * Initializes the AiAgent with the given Laravel application instance.
+     *
+     * Sets up the AI service, logging service, and loads enabled AI providers from configuration.
      *
      * @param Application $app The Laravel application instance.
      */
@@ -55,11 +57,10 @@ class AiAgent
         $this->loadProviders();
     }
 
-    /**
-     * Load all registered AI providers from the configuration file.
+    /****
+     * Loads enabled AI providers and their configurations from application settings.
      *
-     * This method reads the 'ai-agent.providers' configuration and populates the
-     * `$providers` array with enabled adapters and their configurations.
+     * Populates the `$providers` array with provider names as keys and their adapter classes and configurations as values, including only those marked as enabled.
      */
     protected function loadProviders(): void
     {
@@ -77,13 +78,11 @@ class AiAgent
     }
 
     /**
-     * Get an AI provider instance by its name.
+     * Returns an AI provider instance by name or the default provider if none is specified.
      *
-     * If no provider name is given, the default provider from the configuration is used.
-     *
-     * @param string|null $provider The name of the provider to resolve. Uses default if null.
-     * @return AiProviderInterface An instance of the requested AI provider.
-     * @throws ProviderNotFoundException If the requested provider is not found or not configured.
+     * @param string|null $provider The provider name to resolve, or null to use the default.
+     * @return AiProviderInterface The resolved AI provider instance.
+     * @throws ProviderNotFoundException If the specified or default provider is not configured.
      */
     public function provider(?string $provider = null): AiProviderInterface
     {
@@ -101,15 +100,15 @@ class AiAgent
         );
     }
 
-    /**
-     * Generate content using the specified AI provider.
+    /****
+     * Generates content from the specified or default AI provider using a given prompt and options.
      *
-     * @param string $prompt The prompt to send to the AI.
-     * @param array $options Additional options for the provider (e.g., model, temperature).
-     * @param string|null $provider The name of the provider to use. Uses default if null.
-     * @return string The generated content from the AI.
-     * @throws \AiAgent\Exceptions\ApiException If the API call fails.
-     * @throws \Exception For other underlying errors.
+     * @param string $prompt The input prompt to send to the AI provider.
+     * @param array $options Optional settings such as model or temperature.
+     * @param string|null $provider The provider name to use; defaults to the configured provider if null.
+     * @return string The AI-generated content.
+     * @throws \AiAgent\Exceptions\ApiException If the AI provider API call fails.
+     * @throws \Exception For other unexpected errors.
      */
     public function generate(string $prompt, array $options = [], ?string $provider = null): string
     {
@@ -127,14 +126,16 @@ class AiAgent
     }
 
     /**
-     * Generate a chat completion response using the specified AI provider.
+     * Generates a chat completion response from the specified or default AI provider.
      *
-     * @param array $messages An array of message objects (e.g., [['role' => 'user', 'content' => 'Hello']]).
-     * @param array $options Additional options for the provider (e.g., model, max_tokens).
-     * @param string|null $provider The name of the provider to use. Uses default if null.
-     * @return array The chat completion response, typically including the message and usage data.
-     * @throws \AiAgent\Exceptions\ApiException If the API call fails.
-     * @throws \Exception For other underlying errors.
+     * Accepts an array of message objects and optional parameters to customize the provider's behavior. Returns the provider's response, which typically includes the generated message and usage statistics.
+     *
+     * @param array $messages Array of message objects for the chat context.
+     * @param array $options Optional parameters for the provider (e.g., model, max_tokens).
+     * @param string|null $provider Name of the AI provider to use, or null to use the default.
+     * @return array Provider's chat completion response, including generated message and usage data.
+     * @throws \AiAgent\Exceptions\ApiException If the AI provider API call fails.
+     * @throws \Exception For other errors during processing.
      */
     public function chat(array $messages, array $options = [], ?string $provider = null): array
     {
@@ -153,14 +154,14 @@ class AiAgent
     }
 
     /**
-     * Generate embeddings for a given text or array of texts using the specified AI provider.
+     * Generates embeddings for a text string or array of strings using the specified or default AI provider.
      *
-     * @param string|array $input The text string or an array of text strings to embed.
-     * @param array $options Additional options for the provider (e.g., model).
-     * @param string|null $provider The name of the provider to use. Uses default if null.
-     * @return array An array of embedding vectors.
-     * @throws \AiAgent\Exceptions\ApiException If the API call fails.
-     * @throws \Exception For other underlying errors.
+     * @param string|array $input The text or texts to generate embeddings for.
+     * @param array $options Optional settings for the provider, such as model selection.
+     * @param string|null $provider The provider name to use, or default if null.
+     * @return array Embedding vectors corresponding to the input.
+     * @throws \AiAgent\Exceptions\ApiException If the AI provider API call fails.
+     * @throws \Exception For other unexpected errors.
      */
     public function embeddings($input, array $options = [], ?string $provider = null): array
     {
@@ -178,23 +179,20 @@ class AiAgent
         );
     }
 
-    /**
-     * Handles the common logic for AI provider interactions, including caching, logging, and execution.
+    /****
+     * Executes an AI provider operation with unified caching, logging, and token estimation.
      *
-     * This private method abstracts the boilerplate code for making an API call,
-     * handling its caching, logging the interaction (success or failure), and estimating tokens.
+     * This private method centralizes the workflow for invoking an AI provider's method, including cache retrieval and storage, execution timing, token estimation, and logging of both successful and failed interactions. It accepts closures for the specific API call and token estimation logic, ensuring consistent handling across different AI operations.
      *
      * @param string $methodType The type of AI operation (e.g., 'generate', 'chat', 'embeddings').
      * @param string $providerName The name of the AI provider to use.
-     * @param mixed $input The primary input for the AI call (e.g., prompt string, messages array).
+     * @param mixed $input The primary input for the AI call (such as a prompt string or messages array).
      * @param array $options Additional options for the AI call.
-     * @param \Closure $apiCallClosure A closure that, when called, executes the specific AI provider's method.
-     *                                 It should return the result from the AI provider.
-     * @param \Closure $tokenEstimationClosure A closure that, when called with the input and result,
-     *                                         estimates the number of tokens used.
-     * @return mixed The result from the AI provider.
-     * @throws \AiAgent\Exceptions\ApiException Re-throws API exceptions from the provider.
-     * @throws \Exception Re-throws any other exceptions that occur during the process.
+     * @param \Closure $apiCallClosure Closure that executes the AI provider's method and returns the result.
+     * @param \Closure $tokenEstimationClosure Closure that estimates the number of tokens used, given the input and result.
+     * @return mixed The result returned by the AI provider.
+     * @throws \AiAgent\Exceptions\ApiException If the provider throws an API exception.
+     * @throws \Exception If any other error occurs during the process.
      */
     private function _handleProviderInteraction(
         string $methodType,
@@ -262,9 +260,9 @@ class AiAgent
     }
 
     /**
-     * Get the names of all currently loaded and enabled AI providers.
+     * Returns the names of all loaded and enabled AI providers.
      *
-     * @return array An array of provider names.
+     * @return array List of enabled provider names.
      */
     public function getProviderNames(): array
     {
@@ -272,9 +270,9 @@ class AiAgent
     }
 
     /**
-     * Check if caching is enabled in the configuration.
+     * Determines whether AI response caching is enabled in the application configuration.
      *
-     * @return bool True if caching is enabled, false otherwise.
+     * @return bool True if caching is enabled; otherwise, false.
      */
     protected function isCacheEnabled(): bool
     {
@@ -282,16 +280,15 @@ class AiAgent
     }
 
     /**
-     * Generate a unique cache key for an AI request.
+     * Generates a unique cache key for an AI operation based on type, provider, input, and options.
      *
-     * The key is based on the request type, provider name, a hash of the input,
-     * and a hash of the options to ensure uniqueness for distinct requests.
+     * Ensures that each distinct combination of operation type, provider name, input data, and options produces a unique cache key for caching AI responses.
      *
-     * @param string $type The type of AI operation (e.g., 'generate', 'chat').
-     * @param mixed $input The input data for the AI operation.
-     * @param array $options The request options.
-     * @param string $provider The name of the AI provider.
-     * @return string The generated cache key.
+     * @param string $type The AI operation type (e.g., 'generate', 'chat', 'embeddings').
+     * @param mixed $input The input data for the AI operation; arrays and objects are JSON-encoded for hashing.
+     * @param array $options Additional options for the AI request.
+     * @param string $provider The AI provider's name.
+     * @return string The unique cache key.
      */
     protected function getCacheKey(string $type, $input, array $options, string $provider): string
     {
@@ -305,15 +302,13 @@ class AiAgent
     }
 
     /**
-     * Estimate the number of tokens in a given input and output text.
+     * Estimates the total number of tokens in the input and output text using a simple character-based heuristic.
      *
-     * This is a very rough approximation based on the general rule that
-     * 1 token is approximately 4 characters in English text.
-     * This method should be overridden or improved if more accurate tokenization is needed.
+     * Uses the approximation that one token is roughly four characters in English text. The result is the sum of estimated tokens for both input and output.
      *
-     * @param string $input The input text.
-     * @param string $output The output text from the AI.
-     * @return int The estimated total number of tokens.
+     * @param string $input Input text.
+     * @param string $output Output text.
+     * @return int Estimated total token count.
      */
     protected function estimateTokens(string $input, string $output): int
     {

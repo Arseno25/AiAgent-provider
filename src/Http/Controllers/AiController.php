@@ -20,10 +20,7 @@ use Illuminate\Support\Facades\Log; // For optional logging in error handler
 class AiController extends Controller
 {
     /**
-     * Get all available AI providers and the default provider.
-     *
-     * Returns a JSON response containing a list of available provider names
-     * and the name of the default provider as configured.
+     * Returns a JSON response with the list of available AI provider names and the configured default provider.
      *
      * @return JsonResponse
      */
@@ -35,16 +32,13 @@ class AiController extends Controller
         ]);
     }
 
-    /**
-     * Centralized handler for executing AiAgent facade calls and formatting the JSON response.
+    /****
+     * Executes an AI agent operation and returns a standardized JSON response.
      *
-     * This method encapsulates the try-catch logic for AI agent operations,
-     * returning a standardized JSON response for successes or failures.
+     * Runs the provided callable, returning its result in a JSON response on success. If an AiAgent API exception occurs, returns a JSON error response with the exception message and type, using the exception code as the HTTP status if appropriate. For all other exceptions, returns a generic error message with HTTP status 500.
      *
-     * @param callable $agentCall A closure that contains the specific AiAgent facade call to execute.
-     *                            The closure should return the result from the AiAgent method.
-     * @return JsonResponse A JSON response containing either the 'result' of the AI operation
-     *                      or an 'error' message if an exception occurred.
+     * @param callable $agentCall Closure that performs the AI agent operation and returns its result.
+     * @return JsonResponse JSON response containing either the operation result or an error message.
      */
     private function handleAiAgentRequest(callable $agentCall): JsonResponse
     {
@@ -70,12 +64,12 @@ class AiController extends Controller
     }
 
     /**
-     * Generate content using an AI provider.
+     * Handles a content generation request using the specified AI provider.
      *
-     * Uses AiGenerateRequest for input validation.
+     * Processes validated input from the request and returns the generated content or an error response as JSON.
      *
-     * @param AiGenerateRequest $request The validated HTTP request containing 'prompt', 'options', and 'provider'.
-     * @return JsonResponse The result of the content generation or an error response.
+     * @param AiGenerateRequest $request Validated request containing the prompt and optional parameters.
+     * @return JsonResponse JSON response with the generation result or error details.
      */
     public function generate(AiGenerateRequest $request): JsonResponse
     {
@@ -92,12 +86,12 @@ class AiController extends Controller
     }
 
     /**
-     * Generate chat completion using an AI provider.
+     * Handles chat completion requests using an AI provider.
      *
-     * Uses AiChatRequest for input validation.
+     * Processes validated chat messages and optional parameters to generate a chat completion response via the AiAgent facade.
      *
-     * @param AiChatRequest $request The validated HTTP request containing 'messages', 'options', and 'provider'.
-     * @return JsonResponse The result of the chat completion or an error response.
+     * @param AiChatRequest $request Validated request containing chat messages, options, and provider.
+     * @return JsonResponse JSON response with the chat completion result or an error message.
      */
     public function chat(AiChatRequest $request): JsonResponse
     {
@@ -113,12 +107,12 @@ class AiController extends Controller
     }
 
     /**
-     * Generate embeddings using an AI provider.
+     * Handles a request to generate embeddings from input data using an AI provider.
      *
-     * Uses AiEmbeddingsRequest for input validation.
+     * Returns a JSON response containing the embeddings result or an error message.
      *
-     * @param AiEmbeddingsRequest $request The validated HTTP request containing 'input', 'options', and 'provider'.
-     * @return JsonResponse The result of the embeddings generation or an error response.
+     * @param AiEmbeddingsRequest $request Validated request with input data for embeddings.
+     * @return JsonResponse
      */
     public function embeddings(AiEmbeddingsRequest $request): JsonResponse
     {

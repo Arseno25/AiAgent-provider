@@ -20,13 +20,12 @@ class GeminiAdapter extends BaseAdapter
   protected $apiBaseUrl = 'https://generativelanguage.googleapis.com/v1';
 
   /**
-   * Create a new Gemini adapter instance.
+   * Initializes the Gemini adapter with the provided configuration.
    *
-   * Validates that an 'api_key' is provided in the configuration.
-   * Allows overriding `apiBaseUrl` via configuration.
+   * Requires an 'api_key' in the configuration array and optionally allows overriding the default API base URL.
    *
-   * @param array $config The configuration array for this adapter.
-   * @throws \InvalidArgumentException If the 'api_key' is not found in the config.
+   * @param array $config Adapter configuration, must include 'api_key'.
+   * @throws \InvalidArgumentException If 'api_key' is missing from the configuration.
    */
   public function __construct(array $config)
   {
@@ -41,11 +40,15 @@ class GeminiAdapter extends BaseAdapter
   }
 
   /**
-   * {@inheritdoc}
-   * Prepares Guzzle request options specific to the Gemini API.
+   * Builds HTTP request options for Gemini API calls, including headers and API key query parameter.
    *
-   * This includes setting the 'Content-Type' header and adding the API key
-   * as a query parameter to the request URL.
+   * Merges default and custom headers, sets the 'Content-Type' to 'application/json', and attaches the API key as a query parameter. Includes a JSON payload if data is provided.
+   *
+   * @param string $method HTTP method (e.g., 'POST', 'GET').
+   * @param string $endpoint API endpoint path.
+   * @param array $data Optional request payload.
+   * @param array $customHeaders Optional additional headers.
+   * @return array Prepared options array for Guzzle HTTP requests.
    */
   protected function getRequestOptions(string $method, string $endpoint, array $data = [], array $customHeaders = []): array
   {
@@ -70,12 +73,15 @@ class GeminiAdapter extends BaseAdapter
   }
 
   /**
-   * Generate content with a Gemini model.
+   * Generates text using a Gemini model based on the provided prompt.
    *
-   * @param string $prompt The prompt to send to the model.
-   * @param array $options Additional options for the request (e.g., 'model', 'temperature', 'maxOutputTokens').
-   * @return string The generated text content.
-   * @throws ApiException If the API request fails.
+   * Sends the prompt to the specified Gemini model and returns the generated text from the first candidate response.
+   * Model parameters such as temperature and maximum output tokens can be customized via the $options array or configuration defaults.
+   *
+   * @param string $prompt The input prompt for text generation.
+   * @param array $options Optional settings including 'model', 'temperature', and 'max_tokens'.
+   * @return string The generated text, or an empty string if no output is available.
+   * @throws ApiException If the Gemini API request fails.
    */
   public function generate(string $prompt, array $options = []): string
   {
@@ -108,12 +114,14 @@ class GeminiAdapter extends BaseAdapter
     return $response['candidates'][0]['content']['parts'][0]['text'] ?? '';
   }
 
-  /**
-   * Generate chat completion with a Gemini model.
+  /****
+   * Generates a chat completion using a Gemini model based on the provided messages.
    *
-   * @param array $messages An array of message objects, formatted for Gemini.
-   * @param array $options Additional options for the request (e.g., 'model', 'temperature').
-   * @return array The chat completion response, including the message, usage, and ID.
+   * Formats input messages for the Gemini API, sends a request to generate a chat response, and returns the assistant's reply along with usage statistics and a candidate ID.
+   *
+   * @param array $messages Chat messages to be processed, using standard roles.
+   * @param array $options Optional parameters such as 'model', 'temperature', and 'max_tokens'.
+   * @return array An array containing the assistant's message, usage metadata, and a candidate ID.
    * @throws ApiException If the API request fails.
    */
   public function chat(array $messages, array $options = []): array
@@ -158,13 +166,13 @@ class GeminiAdapter extends BaseAdapter
   }
 
   /**
-   * Generate embeddings for a text or array of texts with a Gemini embedding model.
+   * Generates embeddings for one or more texts using a Gemini embedding model.
    *
-   * Uses the `batchEmbedContents` endpoint for efficiency.
+   * Sends a batch request to the Gemini API's `batchEmbedContents` endpoint and returns an array of embedding objects, each containing the embedding vector, input index, and object type.
    *
-   * @param string|array $input The text string or an array of text strings to embed.
-   * @param array $options Additional options, primarily 'model' to specify the embedding model.
-   * @return array An array of embedding objects, each containing the embedding vector, index, and object type.
+   * @param string|array $input The text or array of texts to embed.
+   * @param array $options Optional settings, such as 'model' to specify the embedding model.
+   * @return array Array of embedding objects with keys: 'embedding', 'index', and 'object'.
    * @throws ApiException If the API request fails.
    */
   public function embeddings($input, array $options = []): array
@@ -214,15 +222,12 @@ class GeminiAdapter extends BaseAdapter
   }
 
   /**
-   * Format an array of messages into the 'contents' structure required by the Gemini API.
+   * Converts an array of chat messages into the Gemini API's required 'contents' format.
    *
-   * Gemini API expects a specific format for conversational history, where roles are
-   * 'user' and 'model' (for assistant). System prompts are typically prepended
-   * to the first user message's content.
+   * Maps standard roles ('system', 'user', 'assistant') to Gemini roles, concatenates all system prompts, and prepends them to the first user message. Skips malformed messages.
    *
-   * @param array $messages The array of message objects to format.
-   *                        Standard roles ('system', 'user', 'assistant') are mapped.
-   * @return array The formatted 'contents' array suitable for the Gemini API.
+   * @param array $messages Chat messages with roles and content.
+   * @return array Formatted contents array for Gemini API requests.
    */
   protected function formatMessages(array $messages): array
   {

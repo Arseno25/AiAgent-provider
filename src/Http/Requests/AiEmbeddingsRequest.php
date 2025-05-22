@@ -12,13 +12,12 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class AiEmbeddingsRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
+    /****
+     * Allows all users to make this request.
      *
-     * Authorization is typically handled at a higher level (e.g., route middleware)
-     * in the consuming application. Defaults to true for package flexibility.
+     * Always returns true to permit any user to submit an AI embeddings generation request. Authorization should be enforced elsewhere if needed.
      *
-     * @return bool True if the request is authorized, false otherwise.
+     * @return bool Always true.
      */
     public function authorize(): bool
     {
@@ -26,14 +25,11 @@ class AiEmbeddingsRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the embeddings generation request.
+     * Returns the validation rules for AI embeddings generation requests.
      *
-     * Defines rules for:
-     * - 'input': Required, can be a single string or an array of strings/items to embed.
-     * - 'provider': Optional string, the name of the AI provider.
-     * - 'options': Optional array, additional provider-specific options.
+     * Ensures that the 'input' field is provided as a non-empty string or a non-empty array, while 'provider' and 'options' are optional fields with appropriate types if present.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string> Validation rules for the request data.
      */
     public function rules(): array
     {

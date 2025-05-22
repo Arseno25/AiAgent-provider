@@ -13,12 +13,11 @@ use Illuminate\Foundation\Http\FormRequest;
 class AiChatRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Always authorizes the request for AI chat completion validation.
      *
-     * Authorization is typically handled at a higher level (e.g., route middleware)
-     * in the consuming application. Defaults to true for package flexibility.
+     * Returns true to allow all requests, deferring authorization to other parts of the application.
      *
-     * @return bool True if the request is authorized, false otherwise.
+     * @return bool Always true.
      */
     public function authorize(): bool
     {
@@ -26,16 +25,11 @@ class AiChatRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the chat completion request.
+     * Returns the validation rules for an AI chat completion request.
      *
-     * Defines rules for:
-     * - 'messages': Required array, representing the conversation history.
-     * - 'messages.*.role': Each message must have a role (system, user, or assistant).
-     * - 'messages.*.content': Each message must have content.
-     * - 'provider': Optional string, the name of the AI provider.
-     * - 'options': Optional array, additional provider-specific options.
+     * Ensures the request contains a required array of messages, each with a valid role and content, and optionally allows specifying a provider and additional options.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string> Validation rules for the request data.
      */
     public function rules(): array
     {

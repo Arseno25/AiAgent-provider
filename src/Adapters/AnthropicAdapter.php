@@ -28,13 +28,12 @@ class AnthropicAdapter extends BaseAdapter
   protected const DEFAULT_ANTHROPIC_VERSION = '2023-06-01';
 
   /**
-   * Create a new Anthropic adapter instance.
+   * Initializes the Anthropic adapter with the provided configuration.
    *
-   * Validates that an 'api_key' is provided in the configuration.
-   * Allows overriding `apiBaseUrl` and `anthropic_version` via configuration.
+   * Requires an 'api_key' in the configuration array and allows optional overrides for the API base URL and Anthropic API version.
    *
-   * @param array $config The configuration array for this adapter.
-   * @throws \InvalidArgumentException If the 'api_key' is not found in the config.
+   * @param array $config Adapter configuration, must include 'api_key'.
+   * @throws \InvalidArgumentException If 'api_key' is missing from the configuration.
    */
   public function __construct(array $config)
   {
@@ -49,11 +48,13 @@ class AnthropicAdapter extends BaseAdapter
   }
 
   /**
-   * {@inheritdoc}
-   * Prepares Guzzle request options specific to the Anthropic API.
+   * Constructs HTTP request options for Anthropic API calls, including required headers and optional JSON payload.
    *
-   * This includes setting the 'x-api-key', 'anthropic-version',
-   * and 'Content-Type' headers.
+   * @param string $method HTTP method (e.g., 'POST', 'GET').
+   * @param string $endpoint API endpoint path.
+   * @param array $data Optional request payload to include as JSON.
+   * @param array $customHeaders Optional additional headers to merge with defaults.
+   * @return array Array of options suitable for Guzzle HTTP client.
    */
   protected function getRequestOptions(string $method, string $endpoint, array $data = [], array $customHeaders = []): array
   {
@@ -81,14 +82,13 @@ class AnthropicAdapter extends BaseAdapter
   }
 
   /**
-   * Generate content with Anthropic Claude.
+   * Generates text using Anthropic Claude based on a given prompt.
    *
-   * This method serves as a simplified interface for text generation,
-   * internally utilizing the `chat` method by formatting the prompt as a user message.
+   * Wraps the prompt as a user message and delegates to the chat method, returning the assistant's generated response.
    *
-   * @param string $prompt The prompt to send to Claude.
-   * @param array $options Additional options for the request (passed to the `chat` method).
-   * @return string The generated text content from Claude's response.
+   * @param string $prompt The input prompt for text generation.
+   * @param array $options Optional parameters to customize the generation.
+   * @return string The generated text from Claude's response.
    * @throws ApiException If the API request fails.
    */
   public function generate(string $prompt, array $options = []): string
@@ -108,14 +108,13 @@ class AnthropicAdapter extends BaseAdapter
   }
 
   /**
-   * Generate chat completion with Anthropic Claude.
+   * Generates a chat completion using Anthropic Claude, handling system prompts and message formatting.
    *
-   * Handles system prompts by extracting them from messages or options,
-   * then making a request to the 'messages' endpoint.
+   * Extracts the system prompt from configuration, the first system message, or the 'system' option (in order of precedence), formats user and assistant messages, and sends a request to the Anthropic API. Returns the assistant's response, token usage, and response ID.
    *
-   * @param array $messages An array of message objects.
-   * @param array $options Additional options for the request (e.g., 'model', 'max_tokens', 'system').
-   * @return array The chat completion response, including the message, usage, and ID.
+   * @param array $messages Conversation history as an array of message objects.
+   * @param array $options Optional parameters such as 'model', 'max_tokens', 'temperature', or an explicit 'system' prompt.
+   * @return array Standardized response containing the generated message, token usage, and response ID.
    * @throws ApiException If the API request fails.
    */
   public function chat(array $messages, array $options = []): array
@@ -190,16 +189,14 @@ class AnthropicAdapter extends BaseAdapter
   }
 
   /**
-   * Generate embeddings for a text with Anthropic.
+   * Throws an exception indicating that embeddings are not supported by the Anthropic API.
    *
-   * Note: Anthropic's current Messages API (as of `DEFAULT_ANTHROPIC_VERSION`)
-   * does not directly support a dedicated embeddings endpoint like OpenAI.
-   * This method throws a RuntimeException to indicate this incompatibility.
+   * Always throws a RuntimeException, as the Anthropic Messages API does not provide an embeddings endpoint.
    *
    * @param string|array $input The text or array of texts to embed.
-   * @param array $options Additional options (not currently used).
-   * @return array
-   * @throws \RuntimeException Always, as this feature is not supported.
+   * @param array $options Additional options (unused).
+   * @return array Never returns; always throws.
+   * @throws \RuntimeException Embeddings are not supported by Anthropic.
    */
   public function embeddings($input, array $options = []): array
   {
@@ -207,14 +204,12 @@ class AnthropicAdapter extends BaseAdapter
   }
 
   /**
-   * Format an array of messages into the structure required by the Anthropic API.
+   * Filters and formats messages to include only 'user' and 'assistant' roles for the Anthropic API.
    *
-   * This method filters out system messages (as they are handled separately)
-   * and ensures that only 'user' and 'assistant' roles are included.
+   * Excludes system messages and any messages missing required keys or with unsupported roles.
    *
-   * @param array $messages The array of message objects to format.
-   *                        Each message should have 'role' and 'content' keys.
-   * @return array The formatted messages suitable for the Anthropic API.
+   * @param array $messages Array of messages, each with 'role' and 'content' keys.
+   * @return array Formatted messages suitable for Anthropic API requests.
    */
   protected function formatMessages(array $messages): array
   {

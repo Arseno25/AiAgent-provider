@@ -45,11 +45,9 @@ abstract class BaseAdapter implements AiProviderInterface
   protected $apiBaseUrl;
 
   /**
-   * Create a new adapter instance.
+   * Constructs the adapter and initializes the HTTP client with configurable timeouts.
    *
-   * Initializes the Guzzle HTTP client with common configurations like timeout.
-   *
-   * @param array $config The configuration array for the adapter.
+   * @param array $config Adapter configuration options.
    */
   public function __construct(array $config)
   {
@@ -62,32 +60,30 @@ abstract class BaseAdapter implements AiProviderInterface
   }
 
   /**
-   * Prepares the request options for Guzzle.
-   * This method must be implemented by concrete adapters to provide
-   * authentication, specific headers, and body formatting.
-   *
-   * @param string $method HTTP method (e.g., 'POST', 'GET')
-   * @param string $endpoint API endpoint
-   * @param array $data Request data/payload
-   * @param array $customHeaders Custom headers to merge with default ones
-   * @return array Guzzle request options array (e.g., ['headers' => [...], 'json' => [...], 'query' => [...]])
-   */
+ * Returns provider-specific Guzzle request options for an API call.
+ *
+ * Concrete adapters must implement this method to supply authentication, headers, and payload formatting required by the provider.
+ *
+ * @param string $method HTTP method for the request.
+ * @param string $endpoint API endpoint path.
+ * @param array $data Optional request payload or parameters.
+ * @param array $customHeaders Optional custom headers to include.
+ * @return array Associative array of Guzzle request options.
+ */
   protected abstract function getRequestOptions(string $method, string $endpoint, array $data = [], array $customHeaders = []): array;
 
   /**
-   * Makes an HTTP request to the AI provider using the configured Guzzle client.
+   * Executes an HTTP request to the AI provider and returns the decoded JSON response.
    *
-   * This method centralizes the request logic, incorporating options from `getRequestOptions`,
-   * constructing the full URL, and delegating error handling to `handleGuzzleException`.
+   * Constructs the full request URL using the configured API base URL and endpoint, applies provider-specific request options, and handles errors by mapping Guzzle exceptions to domain-specific exceptions. Throws a LogicException if the API base URL is not set.
    *
-   * @param string $method The HTTP method (e.g., 'POST', 'GET').
-   * @param string $endpoint The API endpoint (e.g., '/completions').
-   * @param array $data The request data/payload, typically for POST, PUT, PATCH methods.
-   * @param array $customHeaders Additional headers specific to this request, merged with defaults.
-   * @return array The decoded JSON response from the API.
-   * @throws \LogicException If `apiBaseUrl` is not set in the concrete adapter.
-   * @throws ApiException Or a more specific subclass like ApiTimeoutException, ApiRequestException, etc.,
-   *                      if the API request fails due to network issues, HTTP errors, or provider-side errors.
+   * @param string $method HTTP method to use (e.g., 'POST', 'GET').
+   * @param string $endpoint API endpoint path.
+   * @param array $data Optional request payload.
+   * @param array $customHeaders Optional additional headers for the request.
+   * @return array Decoded JSON response as an associative array.
+   * @throws \LogicException If the API base URL is not set in the adapter.
+   * @throws ApiException If the request fails due to network, HTTP, or provider-side errors.
    */
   protected function makeRequest(string $method, string $endpoint, array $data = [], array $customHeaders = []): array
   {
@@ -113,14 +109,12 @@ abstract class BaseAdapter implements AiProviderInterface
   }
 
   /**
-   * Parses the HTTP response from the AI provider.
+   * Decodes the JSON body of an HTTP response into an associative array.
    *
-   * Currently, it decodes the JSON response body into an associative array.
+   * Returns an empty array if the response body is empty or contains invalid JSON.
    *
-   * @param ResponseInterface $response The PSR-7 response object.
-   * @return array The decoded JSON response as an array.
-   *               Returns null or an empty array if JSON decoding fails or the body is empty,
-   *               depending on `json_decode` behavior.
+   * @param ResponseInterface $response The HTTP response to parse.
+   * @return array Associative array representation of the JSON response, or an empty array on failure.
    */
   protected function parseResponse(ResponseInterface $response): array
   {
@@ -129,19 +123,18 @@ abstract class BaseAdapter implements AiProviderInterface
     return json_decode($responseBody, true) ?? [];
   }
 
-  /**
-   * Handles Guzzle exceptions and maps them to specific custom API exceptions.
+  /****
+   * Converts Guzzle exceptions into domain-specific API exceptions based on error type and HTTP status code.
    *
-   * This method provides a standardized way of converting low-level Guzzle exceptions
-   * into more meaningful exceptions that can be caught and handled by the application.
+   * Maps connection timeouts, client errors, authentication failures, rate limiting, and server errors to custom exceptions, extracting detailed error messages from the API response when available.
    *
-   * @param GuzzleException $e The Guzzle exception caught during an API request.
-   * @throws ApiTimeoutException If the request timed out (ConnectException).
-   * @throws ApiRequestException For client-side errors like 400 Bad Request or 422 Unprocessable Entity.
-   * @throws ApiAuthenticationException For authentication errors like 401 Unauthorized or 403 Forbidden.
-   * @throws ApiRateLimitException For rate limiting errors like 429 Too Many Requests.
-   * @throws ApiServerException For server-side errors from the provider (5xx status codes).
-   * @throws ApiException For other Guzzle or HTTP errors that don't fit a more specific category.
+   * @param GuzzleException $e The exception thrown during an API request.
+   * @throws ApiTimeoutException If a connection timeout occurs.
+   * @throws ApiRequestException For client-side errors (400, 422).
+   * @throws ApiAuthenticationException For authentication failures (401, 403).
+   * @throws ApiRateLimitException For rate limiting errors (429).
+   * @throws ApiServerException For server-side errors (500, 502, 503, 504).
+   * @throws ApiException For all other communication or HTTP errors.
    */
   protected function handleGuzzleException(GuzzleException $e): void
   {
@@ -201,11 +194,9 @@ abstract class BaseAdapter implements AiProviderInterface
   }
   
   /**
-   * Get the configured name of the AI provider.
+   * Returns the configured name of the AI provider, or the adapter's class name if not set.
    *
-   * Falls back to the short class name of the adapter if no name is configured.
-   *
-   * @return string The name of the provider.
+   * @return string Provider name or adapter class name.
    */
   public function getName(): string
   {
@@ -213,9 +204,9 @@ abstract class BaseAdapter implements AiProviderInterface
   }
 
   /**
-   * Get information about the provider, including its name, class, and supported features.
+   * Returns metadata about the provider, including its name, class, and supported features.
    *
-   * @return array An associative array with provider information.
+   * @return array Associative array with keys 'name', 'class', and 'features'.
    */
   public function info(): array
   {
@@ -227,11 +218,11 @@ abstract class BaseAdapter implements AiProviderInterface
   }
 
   /**
-   * Get an array indicating the supported features of this adapter.
+   * Returns an associative array indicating which features are supported by the adapter.
    *
-   * Features are determined by the existence of corresponding methods (generate, chat, embeddings).
+   * The features `generate`, `chat`, and `embeddings` are marked as supported if the corresponding methods exist in the adapter.
    *
-   * @return array Associative array where keys are feature names and values are booleans.
+   * @return array Associative array with feature names as keys and boolean values indicating support.
    */
   protected function getSupportedFeatures(): array
   {
@@ -243,11 +234,11 @@ abstract class BaseAdapter implements AiProviderInterface
   }
 
   /**
-   * Get a specific configuration value for this adapter.
+   * Retrieves a configuration value by key, returning a default if the key is not set.
    *
-   * @param string $key The configuration key.
-   * @param mixed|null $default The default value to return if the key is not found.
-   * @return mixed The configuration value or the default.
+   * @param string $key Configuration key to retrieve.
+   * @param mixed|null $default Value to return if the key does not exist.
+   * @return mixed The configuration value or the provided default.
    */
   protected function getConfig(string $key, $default = null)
   {
@@ -255,10 +246,10 @@ abstract class BaseAdapter implements AiProviderInterface
   }
 
   /**
-   * Check if a specific configuration key exists for this adapter.
+   * Determines whether a given configuration key is set for the adapter.
    *
-   * @param string $key The configuration key to check.
-   * @return bool True if the key exists, false otherwise.
+   * @param string $key Configuration key to check.
+   * @return bool True if the configuration key exists; otherwise, false.
    */
   protected function hasConfig(string $key): bool
   {
@@ -266,10 +257,10 @@ abstract class BaseAdapter implements AiProviderInterface
   }
 
   /**
-   * Validate that all required configuration keys are present for this adapter.
+   * Ensures all specified configuration keys are present in the adapter's configuration.
    *
-   * @param array $required An array of required configuration key names.
-   * @throws \InvalidArgumentException If a required configuration key is missing.
+   * @param array $required List of required configuration key names.
+   * @throws \InvalidArgumentException If any required configuration key is missing.
    */
   protected function validateConfig(array $required): void
   {
