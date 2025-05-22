@@ -11,26 +11,33 @@ class TestAdapter extends BaseAdapter
   public ?string $apiBaseUrl = 'http://fake-api.test'; 
 
   /**
-   * Optionally allow a custom Guzzle client to be set for testing.
-   * @param Client $client
+   * Sets a custom Guzzle HTTP client instance for use in tests.
+   *
+   * Replaces the default client with the provided one to enable controlled testing scenarios.
    */
   public function setClient(Client $client): void
   {
       $this->client = $client;
   }
 
-  /**
-   * Allow setting a custom API base URL for testing.
-   * @param string|null $url
+  /****
+   * Sets the API base URL to a custom value or clears it for testing purposes.
+   *
+   * @param string|null $url The new API base URL, or null to unset.
    */
   public function setApiBaseUrl(?string $url): void
   {
       $this->apiBaseUrl = $url;
   }
 
-  /**
-   * {@inheritdoc}
-   * Basic implementation for testing.
+  /****
+   * Constructs HTTP request options for testing, merging a default test header with any custom headers and including JSON data if provided.
+   *
+   * @param string $method HTTP method for the request.
+   * @param string $endpoint Target endpoint for the request.
+   * @param array $data Optional data to include as JSON payload.
+   * @param array $customHeaders Additional headers to merge with the default test header.
+   * @return array Assembled request options suitable for test scenarios.
    */
   protected function getRequestOptions(string $method, string $endpoint, array $data = [], array $customHeaders = []): array
   {
@@ -43,8 +50,12 @@ class TestAdapter extends BaseAdapter
     return $options;
   }
 
-  /**
-   * Generate content with test adapter.
+  /****
+   * Simulates content generation for a given prompt, returning a fixed test response.
+   *
+   * @param string $prompt The input prompt to generate content for.
+   * @param array $options Optional parameters for generation (ignored in this stub).
+   * @return string A static test response referencing the provided prompt.
    */
   public function generate(string $prompt, array $options = []): string
   {

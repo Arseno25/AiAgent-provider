@@ -21,13 +21,12 @@ class OpenAiAdapter extends BaseAdapter
   protected $apiBaseUrl = 'https://api.openai.com/v1';
 
   /**
-   * Create a new OpenAI adapter instance.
+   * Initializes the OpenAI adapter with the provided configuration.
    *
-   * Validates that an 'api_key' is provided in the configuration.
-   * Allows overriding the `apiBaseUrl` via configuration.
+   * Requires an 'api_key' in the configuration array and allows optional override of the API base URL via 'api_base_url'.
    *
-   * @param array $config The configuration array for this adapter.
-   * @throws \InvalidArgumentException If the 'api_key' is not found in the config.
+   * @param array $config Adapter configuration, must include 'api_key'.
+   * @throws \InvalidArgumentException If 'api_key' is missing from the configuration.
    */
   public function __construct(array $config)
   {
@@ -43,11 +42,15 @@ class OpenAiAdapter extends BaseAdapter
   }
 
   /**
-   * {@inheritdoc}
-   * Prepares Guzzle request options specific to the OpenAI API.
+   * Builds HTTP request options for OpenAI API calls, including required headers and optional JSON payload.
    *
-   * This includes setting the Authorization header with the API key
-   * and the Content-Type header for JSON payloads.
+   * Merges default headers with any custom headers and attaches the data as a JSON body if provided.
+   *
+   * @param string $method HTTP method (e.g., 'POST', 'GET').
+   * @param string $endpoint API endpoint path.
+   * @param array $data Optional data to include as a JSON payload.
+   * @param array $customHeaders Optional additional headers to merge with defaults.
+   * @return array Prepared options array for Guzzle HTTP requests.
    */
   protected function getRequestOptions(string $method, string $endpoint, array $data = [], array $customHeaders = []): array
   {
@@ -72,12 +75,12 @@ class OpenAiAdapter extends BaseAdapter
   }
 
   /**
-   * Generate content with OpenAI using the chat completions endpoint.
+   * Generates text using the OpenAI chat completions endpoint from a single prompt.
    *
-   * This method adapts a single prompt to the chat completions message format.
+   * Converts the provided prompt into a chat message and returns the generated response text. Uses model, max tokens, and temperature from options or configuration defaults.
    *
    * @param string $prompt The prompt to send to the AI.
-   * @param array $options Additional options for the request (e.g., 'model', 'max_tokens', 'temperature').
+   * @param array $options Optional settings such as 'model', 'max_tokens', and 'temperature'.
    * @return string The generated text content.
    * @throws ApiException If the API request fails.
    */
@@ -109,11 +112,13 @@ class OpenAiAdapter extends BaseAdapter
   }
 
   /**
-   * Generate chat completion with OpenAI.
+   * Generates a chat completion using the OpenAI API based on a sequence of messages.
    *
-   * @param array $messages An array of message objects (e.g., [['role' => 'user', 'content' => 'Hi']]).
-   * @param array $options Additional options for the request (e.g., 'model', 'max_tokens').
-   * @return array The chat completion response, including the message, usage statistics, and ID.
+   * Accepts an array of message objects representing the conversation history and returns the assistant's reply, token usage statistics, and response ID.
+   *
+   * @param array $messages Conversation history as an array of message objects, each with 'role' and 'content'.
+   * @param array $options Optional parameters such as 'model', 'temperature', and 'max_tokens' to customize the request.
+   * @return array Associative array containing the assistant's message, usage statistics, and response ID.
    * @throws ApiException If the API request fails.
    */
   public function chat(array $messages, array $options = []): array
@@ -141,11 +146,11 @@ class OpenAiAdapter extends BaseAdapter
   }
 
   /**
-   * Generate embeddings for a text or array of texts with OpenAI.
+   * Generates embeddings for a given text or array of texts using the OpenAI API.
    *
-   * @param string|array $input The text or array of texts to embed.
-   * @param array $options Additional options for the request, primarily 'model'.
-   * @return array An array of embedding objects, each containing the embedding vector, index, and object type.
+   * @param string|array $input The text or array of texts to generate embeddings for.
+   * @param array $options Optional settings such as the embedding model to use.
+   * @return array List of embedding objects returned by the API.
    * @throws ApiException If the API request fails.
    */
   public function embeddings($input, array $options = []): array

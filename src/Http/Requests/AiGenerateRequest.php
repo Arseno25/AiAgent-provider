@@ -13,12 +13,11 @@ use Illuminate\Foundation\Http\FormRequest;
 class AiGenerateRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Allows all users to make this request.
      *
-     * In this package, we assume that authorization is handled by middleware
-     * or the consuming application's policies, so this defaults to true.
+     * Always returns true, assuming authorization is managed elsewhere in the application.
      *
-     * @return bool True if the request is authorized, false otherwise.
+     * @return bool
      */
     public function authorize(): bool
     {
@@ -30,12 +29,9 @@ class AiGenerateRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the content generation request.
+     * Returns the validation rules for AI content generation requests.
      *
-     * Defines rules for:
-     * - 'prompt': Required string, the input text for the AI.
-     * - 'provider': Optional string, the name of the AI provider to use.
-     * - 'options': Optional array, additional provider-specific options.
+     * Ensures the request includes a required string prompt, and optionally allows a provider name and additional options.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
      */
