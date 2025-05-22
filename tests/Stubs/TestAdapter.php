@@ -3,14 +3,53 @@
 namespace AiAgent\Tests\Stubs;
 
 use AiAgent\Adapters\BaseAdapter;
+use GuzzleHttp\Client; // Added for type hinting
 
 class TestAdapter extends BaseAdapter
 {
+  // Allow public access for testing base adapter logic
+  public ?string $apiBaseUrl = 'http://fake-api.test'; 
+
+  /**
+   * Optionally allow a custom Guzzle client to be set for testing.
+   * @param Client $client
+   */
+  public function setClient(Client $client): void
+  {
+      $this->client = $client;
+  }
+
+  /**
+   * Allow setting a custom API base URL for testing.
+   * @param string|null $url
+   */
+  public function setApiBaseUrl(?string $url): void
+  {
+      $this->apiBaseUrl = $url;
+  }
+
+  /**
+   * {@inheritdoc}
+   * Basic implementation for testing.
+   */
+  protected function getRequestOptions(string $method, string $endpoint, array $data = [], array $customHeaders = []): array
+  {
+    $options = [
+      'headers' => array_merge(['X-Test-Header' => 'TestValue'], $customHeaders)
+    ];
+    if (!empty($data)) {
+      $options['json'] = $data;
+    }
+    return $options;
+  }
+
   /**
    * Generate content with test adapter.
    */
   public function generate(string $prompt, array $options = []): string
   {
+    // This method would call $this->makeRequest in a real adapter.
+    // For stub purposes, we can directly return or simulate a call.
     return "Test response for: {$prompt}";
   }
 
